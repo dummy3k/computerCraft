@@ -64,9 +64,11 @@ function dropDown()
 	return turtle.dropDown()
 end
 
-function placeDown()
+function placeDown(action)
 	if not turtle.placeDown() then
-		error("placeDown failed")
+		if action ~= "false" then
+			error("placeDown failed")
+		end
 	end
 end
 
