@@ -19,13 +19,3 @@ end
 function toInt(x)
 	return (x + 1) - 1
 end
-
-locationAwareTurtle = {
-	x,
-	y,
-	z,
-	
-	forward = function()
-	end
-}
-

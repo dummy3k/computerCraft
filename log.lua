@@ -1,3 +1,5 @@
+-- http://pastebin.com/VNAPTwzc
+
 local level = "DEBUG"
 local LOG_SERVER = 183
 
@@ -34,6 +36,6 @@ function rednetSend(msg_level, params)
 	
 	msg = {level = msg_level, msg=text, host=os.getComputerLabel()}
 	msg = textutils.serialize(msg)
-	print(msg)
+	--print(msg)
 	rednet.send(LOG_SERVER, msg)
 end
