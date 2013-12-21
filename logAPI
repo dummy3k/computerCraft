@@ -1,0 +1,380 @@
+local level = "DEBUG"
+local LOG_SERVER = 183
+
+function debug(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	if level == "INFO" then return end
+	renderMsg("DEBUG", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function info(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	renderMsg("INFO", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function warn(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	renderMsg("WARN", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function error(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	renderMsg("ERROR", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function setLevel(value)
+	level = value
+end
+
+function rednetSend(msg_level, params)
+	local text = ""
+	for k, v in pairs(params) do
+		text = text..tostring(v)
+	end
+	
+	msg = {level = msg_level, msg=text, host=os.getComputerLabel()}
+	msg = textutils.serialize(msg)
+	print(msg)
+	rednet.send(LOG_SERVER, msg)
+end
+
+
+local classLoader = {}
+function RegisterClass(name, value)
+	classLoader[name] = value
+end
+
+local appender = {}
+local root_logger = nil
+local config
+
+function readLogConfig(filename)
+	local f = fs.open("log.config", "r")
+	local log_config_str = f.readAll()
+	--print(log_config_str)
+	f.close()
+	
+	local log_config = textutils.unserialize(log_config_str)
+	if not log_config then error("failed to load log config") end
+	--print(log_config)
+	for k, v in pairs(log_config.appender) do
+		--print(k)
+		
+		--[[
+		if v.type == "chat" then
+			appender[k] = ChatBoxAppender:new(v)
+		elseif v.type == "console" then
+			appender[k] = ConsoleAppender:new(v)
+		elseif v.type == "file" then
+			appender[k] = FileAppender:new(v)
+		else
+			print("unknown type: ", v.type)
+		end
+		print("#classLoader: ", #classLoader)
+		print("classLoader.FileAppender: ", classLoader.FileAppender)
+		]]--
+		if not classLoader[v.type] then
+			print("unknown type: ", v.type)
+		else
+			--appender[k] = FileAppender.new(v)
+			appender[k] = classLoader[v.type]:new(v)
+			--print("appender[k]: ", appender[k])
+		end
+	end
+	
+	for k, v in pairs(log_config.appender) do
+		v.name = k
+	end
+	for k, v in pairs(log_config.logger) do
+		v.name = k
+	end
+	
+	config = log_config
+	root_logger = Logger:new(log_config.logger.root)
+	--root_logger.name = "root"
+end
+
+BaseAppender = {}
+function BaseAppender:new(o)
+	o = o or {}   -- create object if user does not provide one
+	setmetatable(o, self)
+	self.__index = self
+	
+	--print("BaseAppender:new(o)")
+	if o.filter then
+		--print("appender has filter")
+		if o.filter.type == "level_filter" then
+			o.filter = LevelFilter:new(o.filter)
+		else
+			print("unkown filter")
+		end
+	end
+
+	return o
+end
+
+function BaseAppender.renderMsg(o, msg)
+	if not o.format then
+		return msg.text
+	else
+		rendered_text = o.format
+		rendered_text = rendered_text:gsub("%%t", os.time())
+		rendered_text = rendered_text:gsub("%%logger", msg.logger_name)
+		rendered_text = rendered_text:gsub("%%msg", msg.text)
+		rendered_text = rendered_text:gsub("%%level", msg.level)
+		return rendered_text
+	end
+end
+
+ChatBoxAppender = BaseAppender:new{}
+function ChatBoxAppender:new(o)
+	o = BaseAppender:new(o or {})
+	setmetatable(o, self)
+	self.__index = self
+	return o
+end
+classLoader.ChatBoxAppender = ChatBoxAppender
+
+function ChatBoxAppender.append(o, msg)
+	local status, err =  pcall(function()
+		local p = peripheral.wrap(o.side)
+		p.say(o:renderMsg(msg))
+		--os.sleep(0.1)
+		if o.sleep then os.sleep(o.sleep) end
+	end) 
+	if not status then
+		print(err)
+	end
+end
+
+ConsoleAppender = BaseAppender:new{}
+function ConsoleAppender:new(o)
+	o = BaseAppender:new(o or {})
+	setmetatable(o, self)
+	self.__index = self
+	return o
+end
+classLoader.ConsoleAppender = ConsoleAppender
+
+function ConsoleAppender.append(o, msg)
+	--print("o: ", o)
+	print(o:renderMsg(msg))
+end
+
+FileAppender = BaseAppender:new{}
+function FileAppender:new(o)
+	o = BaseAppender:new(o or {})
+	setmetatable(o, self)
+	self.__index = self
+	return o
+end
+classLoader.FileAppender = FileAppender
+
+function FileAppender.append(o, msg)
+	if fs.exists(o.filename) and fs.getSize(o.filename) > o.max_size then
+		--print("fs.size(o.filename): ", fs.getSize(o.filename))
+		local filename_to_delete = o.filename.."."..o.keep
+		if fs.exists(filename_to_delete) then
+			--print("deleting: ", filename_to_delete)
+			fs.delete(filename_to_delete)
+		end
+		for i=o.keep,1, -1 do
+			local old_filename = o.filename.."."..i
+			local new_filename = o.filename.."."..i + 1
+			if fs.exists(old_filename) then
+				--print(old_filename, " -> ", new_filename)
+				fs.move(old_filename, new_filename)
+			end
+		end
+		--print(o.filename, "-> ", o.filename..".1")
+		fs.move(o.filename, o.filename..".1")
+	end
+	local f = fs.open(o.filename, "a")
+	f.write(o:renderMsg(msg))
+	f.write("\n")
+	f:close()
+end
+
+LevelFilter = {}
+function LevelFilter:new(o)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	return o
+end
+
+function LevelFilter.pass(o, msg)
+	--print("o.min: ", o.min)
+	return checkLevel(msg.level, o.min)
+end
+
+Logger = {}
+function Logger:new(o)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+
+	
+	--[[
+	if not o.appender then o.appender = {} end
+	for k, v in pairs(o) do
+			if not v.type then
+			elseif v.type == "appender" then
+				o.appender[k] = appender[k]
+			else
+				print("uknown type: ", v.type)
+			end
+	end
+	]]--
+	
+	local config_root = config.logger[o.name]
+	if config_root then
+		--print(o.name, " has config")
+		if config_root.level then
+			o.level = config_root.level
+		end
+	end
+	
+	return o
+end
+
+function Logger.debug(o, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	--if o.level == "INFO" then return end
+	o:renderMsg("DEBUG", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function Logger.info(o, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	o:renderMsg("INFO", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function Logger.warn(o, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	o:renderMsg("WARN", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function Logger.error(o, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)
+	o:renderMsg("ERROR", {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10})
+end
+
+function checkLevel(value, limit)
+	local level_values = {DEBUG=0, INFO=1, WARN=2, ERROR=3}
+	--if value == "DEBUG" and limit == "INFO" then return false end
+	--return true
+	return (level_values[value] >= level_values[limit])
+end
+
+function Logger.logInternal(o, msg_level, params)
+end
+
+function Logger.renderMsg(o, msg_level, params)
+	--[[
+	if not checkLevel(msg_level, o.level) then return end
+	local text = ""
+	for k, v in pairs(params) do
+		text = text..tostring(v)
+	end
+	]]--
+	if not checkLevel(msg_level, o.level) then return end
+
+	local text = ""
+	for k, v in pairs(params) do
+		text = text..tostring(v)
+	end
+
+	local msg = {logger_name=o.name, level=msg_level, text=text}
+
+	for k, v in pairs(o.appender) do
+		--print(text)
+		local a = appender[v]
+		if a and (not a.filter or a.filter:pass(msg)) then
+			--[[
+			local rendered_text
+			if not a.format then
+				rendered_text = text
+			else
+				rendered_text = a.format
+				rendered_text = rendered_text:gsub("%%t", os.time())
+				rendered_text = rendered_text:gsub("%%logger", o.name)
+				rendered_text = rendered_text:gsub("%%msg", text)
+				rendered_text = rendered_text:gsub("%%level", msg_level)
+			end
+			]]--
+			a:append(msg)
+		end
+		
+		--[[
+		for k2, v2 in pairs(o.filter or {}) do
+		end
+		if v.level then
+			if checkLevel(msg_level, v.level) then
+				v:renderMsg(text)
+			end
+		else
+			print("appender has no level")
+			
+		end
+		]]--
+	end
+end
+
+function getLogger(name)
+	return root_logger:getLogger(name)
+end
+
+function Logger.getLogger(o, name)
+	--Logger:new(config.logger["computer.foo"])
+	local start_pos, end_pos = string.find(name, "%.")
+	if not start_pos then
+		local newName
+		if o.name == "root" then
+			newName = name
+		else
+			newName = o.name.."."..name
+		end
+		local retVal = Logger:new{name=newName,
+														  level=o.level,
+														  appender=o.appender}
+		--retVal.name = o.name.."."..name
+		return retVal
+	else
+		print("start_pos: ", start_pos)
+		local firstPart = name:sub(1, start_pos - 1)
+		local nextPart = name:sub(start_pos + 1)
+		print("firstPart: '", firstPart, "', nextPart: '", nextPart, "'")
+		return o:getLogger(firstPart):getLogger(nextPart)
+	end
+end
+
+
+local tArgs = {...}
+if tArgs[1] == "test" then
+	readLogConfig("log.config")
+	--appender.console:renderMsg("TEST")
+
+	print("root_logger.level: ", root_logger.level)
+	print("root_logger.name: ", root_logger.name)
+
+	--computerLog = Logger:new(config.logger.computer)
+	computerLog = root_logger:getLogger("computer")
+	print("computerLog.level: ", computerLog.level)
+	print("computerLog.name: ", computerLog.name)
+
+	computerFooLog = computerLog:getLogger("foo")
+	print("computerFooLog.level: ", computerFooLog.level)
+	print("computerFooLog.name: ", computerFooLog.name)
+
+	--computerFooBarLog = computerFooLog:getLogger("bar")
+	--computerFooBarLog = computerLog:getLogger("foo.bar")
+	computerFooBarLog = root_logger:getLogger("computer.foo.bar")
+	print("computerFooBarLog.level: ", computerFooBarLog.level)
+	print("computerFooBarLog.name: ", computerFooBarLog.name)
+
+	root_logger:debug("root_logger DEBUG Msg")
+	root_logger:info("root_logger INFO Msg")
+	root_logger:warn("root_logger WARN Msg")
+
+	computerLog:debug("computerLog DEBUG Msg")
+	computerLog:info("computerLog INFO Msg")
+	computerLog:warn("computerLog WARN Msg")
+
+	computerFooBarLog:debug("computerFooBarLog DEBUG Msg")
+	computerFooBarLog:info("computerFooBarLog INFO Msg")
+	computerFooBarLog:warn("computerFooBarLog WARN Msg")
+
+end
+

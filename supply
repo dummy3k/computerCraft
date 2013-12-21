@@ -1,0 +1,28 @@
+if not os.loadAPI("log") then	error("could not load log API") end
+
+m = peripheral.wrap("right")
+
+function supply()
+	for i=1,6 do
+		for j=0,2 do
+			turtle.select(i)
+			while turtle.getItemSpace(i) > 0 and m.suckDown(i - 1, 1) do
+				log.debug("sucked #", i)
+			end
+			
+			if turtle.getItemCount(i) > 0 then
+				turtle.select(i)
+				while m.dropUp(i - 1 + (j * 9), 1) do
+					log.debug("drop #", i)
+				end
+			end
+		end
+	end
+
+end
+
+while true do
+	log.debug("suppling...")
+	supply()
+	os.sleep(15)
+end
