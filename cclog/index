@@ -1,8 +1,8 @@
-f;/cclog
-f;/cclogClasses/BaseAppender.lua
-f;/cclogClasses/BaseClass.lua
-f;/cclogClasses/ConsoleAppender.lua
-f;/cclogClasses/FileAppender.lua
-f;/cclogClasses/Filters.lua
-f;/cclogClasses/Logger.lua
+f;/usr/api/cclog
+f;/usr/api/cclogClasses/BaseAppender.lua
+f;/usr/api/cclogClasses/BaseClass.lua
+f;/usr/api/cclogClasses/ConsoleAppender.lua
+f;/usr/api/cclogClasses/FileAppender.lua
+f;/usr/api/cclogClasses/Filters.lua
+f;/usr/api/cclogClasses/Logger.lua
 
