@@ -45,3 +45,18 @@ necessary. You can remove surplus coal, before the turtle goes up.
 One the turtle reaches the specified altitude it will start serving
 GPS requests. If the turtle reboots (after a server reboot) it will
 automatically serve GPS requests again.
+
+cclog
+=====
+
+Install ```mpt```
+
+```
+> pastebin run 09QAQFaN
+```
+
+Add to ```/etc/ccpt/sources```
+```
+https://raw.githubusercontent.com/dummy3k/computerCraft/master/sources.txt
+```
+

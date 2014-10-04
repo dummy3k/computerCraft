@@ -1,0 +1,53 @@
+rs.setOutput("top", true)
+rs.setOutput("bottom", true)
+
+p = peripheral.wrap("bottom")
+
+print(os.getComputerID()..": "..os.getComputerLabel())
+ressource = os.getComputerLabel():gsub("replicator", "")
+
+function getItemQty()
+	for k, v in pairs(p.getAllStacks()) do
+		--[[
+		for k2, v2 in pairs(v) do
+			print(k2..": "..tostring(v2))
+			--if k2 == "q
+		end
+		]]--
+		--print(v.qty)
+		return v.qty
+	end
+end
+print(getItemQty())
+
+function getFluidAmount()
+	local info = p.getTankInfo("left")
+	--print(textutils.serialize(info))
+	return info[1].amount
+end
+print(getFluidAmount())
+
+print("startup finished")
+
+--[[
+for k, v in ipairs(p.getTankInfo("left")) do
+	--print(tostring(v))
+	for k2, v2 in pairs(v) do
+		print(k2..": "..v2)
+	end
+end
+
+print(textutils.serialize(p.getTankInfo("left")))
+]]--
+
+rednet.open("top")
+while true do
+	sender, p2 = rednet.receive()
+	print(sender)
+	
+	local info = {["ressource"]=ressource,
+				  ["itemQty"]=getItemQty(),
+				  ["fluidAmount"]=getFluidAmount()}
+	--info.computerLabel = os.getComputerLabel()
+	rednet.send(sender, textutils.serialize(info))
+end

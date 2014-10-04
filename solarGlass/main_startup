@@ -1,0 +1,144 @@
+--print(peripheral.getNames())
+
+glass = peripheral.wrap("left")
+glass.clear()
+
+
+
+--[[
+x = glass.addText(5, 20, "Test Text Foo", 0x000000)
+print(x)
+for k2, v2 in pairs(x) do
+	print(k2..": "..tostring(v2))
+end
+
+glass.addBox(1,1,80,10,0xFFFFFF,0.2)
+print(glass.getUsers())
+for k2, v2 in ipairs(glass.getUsers()) do
+	print(k2..": "..v2 .. "\n")
+end
+
+for k2, v2 in pairs(peripheral.getNames()) do
+	print(k2..": "..v2 .. "\n")
+end
+
+for k2, v2 in pairs(p.getNames()) do
+	print(k2..": "..v2 .. "\n")
+end
+]]--
+
+
+rednet.open("top")
+
+
+
+ProgressBar = {}
+ProgressBar.__index = ProgressBar
+
+function ProgressBar.create(x, y, width, maxValue)
+	local retVal = {}
+	setmetatable(retVal, ProgressBar)
+	retVal.maxValue = maxValue
+	retVal.width = width
+
+	retVal.top = y
+	retVal.height = 9
+	glass.addBox(x, y, width, retVal.height,0xFFFFFF,0.2)
+	retVal.percentBox = glass.addBox(x, y, 0, retVal.height,0xFFFFFF,1)
+	retVal.percentText = glass.addText(x, y + 1, "0", 0x000000)
+	
+	return retVal
+end
+
+function ProgressBar:setValue(v)
+	if not v then
+		v = 0
+	end
+	self.percentBox.setWidth(self.width/self.maxValue*v)
+	self.percentText.setText(v)
+end
+
+function ProgressBar:bottom()
+	return self.top + self.height
+end
+
+--[[
+p1 = ProgressBar.create(1, 1, 100, 16000)
+p2 = ProgressBar.create(10, p1:bottom() + 1, 100, 64)
+p3 = ProgressBar.create(1, p2:bottom() + 1, 100, 64)
+p1:setValue(500)
+]]--
+
+Ressource = {}
+Ressource.__index = Ressource
+
+function Ressource.create(y, name)
+	local retVal = {}
+	setmetatable(retVal, Ressource)
+	retVal.top = y
+	retVal.name = name
+	retVal.fluid = ProgressBar.create(1, y, 100, 16000)
+	retVal.items = ProgressBar.create(102, y, 100, 64)
+	
+	glass.addBox(204, y, 50, retVal.fluid.height,0xFFFFFF,0.2)
+	glass.addText(204, y + 1, name, 0x000000)
+	
+	return retVal
+end
+
+function Ressource:bottom()
+	return self.fluid:bottom()
+end
+
+function Ressource:setValue(fluidAmount, itemQty)
+	self.fluid:setValue(fluidAmount)
+	self.items:setValue(itemQty)
+end
+
+y = 20
+res_table = {}
+for k, v in pairs({"Resin", "Copper", "RedStone", "CoalDust", "Iron", "Tin"}) do
+	res_table[v] = Ressource.create(y, v)
+	y = res_table[v]:bottom() + 1
+end
+
+-- r1 = Ressource.create(1, "Resin")
+-- r2 = Ressource.create(r1.fluid:bottom() + 1, "Copper")
+
+
+function receive()
+	--rednet.send(7, "test")
+	rednet.broadcast("test")
+	do_receive = true
+	tank_info = {}
+	while do_receive do
+		sender, msg = rednet.receive(1)
+		if not sender then
+			do_receive = false
+		else
+			--print(sender..": "..msg)
+			--print(msg)
+			msg = textutils.unserialize(msg)
+			--print(res_table["Resin"])
+			--print(msg.ressource)
+			local r = res_table[msg.ressource]
+			r:setValue(msg.fluidAmount, msg.itemQty)
+			
+			--[[
+			ressource = msg.computerLabel:gsub("replicator", "")
+			print(ressource)
+			tank_info[ressource] = msg.amount
+			]]--
+		end
+	end
+end
+
+while true do
+	receive()
+end
+
+--[[
+txt = glass.addText(1, 1, "Test Text Foo", 0x000000)
+os.sleep(1)
+txt.setText("foo")
+]]--

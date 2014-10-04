@@ -1,0 +1,48 @@
+config = {foo=2}
+loggers = {}
+
+dofile("/usr/api/cclogClasses/BaseClass.lua")
+dofile("/usr/api/cclogClasses/Filters.lua")
+dofile("/usr/api/cclogClasses/BaseAppender.lua")
+dofile("/usr/api/cclogClasses/ConsoleAppender.lua")
+dofile("/usr/api/cclogClasses/FileAppender.lua")
+dofile("/usr/api/cclogClasses/Logger.lua")
+
+
+function loadConfigTable(t)
+	config.appenders = BaseClass:load(t.appenders)
+	-- config.loggers = BaseClass:load(t.loggers)
+	
+	config.loggers = {}
+	for k, v in pairs(t.loggers) do
+		config.loggers[k] = Logger:load(v)
+		config.loggers[k].name = k
+	end
+	
+	config.foo = t.foo
+end
+
+function getLogger(name)
+	if not name then
+		return getLogger("root")
+	else
+		return config.loggers[name]
+	end
+end
+
+function getLevelValue(lvl)
+	local levels = {DEBUG=1, INFO=2, WARN=3, ERROR=4}
+	return levels[lvl:upper()]
+end
+
+
+PythonFormatter = BaseClass:inherit("PythonFormatter")
+
+-- http://lua-users.org/wiki/StringInterpolation
+function PythonFormatter:renderMsg(tab)
+  return (self.format:gsub('%%%((%a%w*)%)([-0-9%.]*[cdeEfgGiouxXsq])',
+            function(k, fmt) return tab[k] and ("%"..fmt):format(tab[k]) or
+                '%('..k..')'..fmt end))
+end
+
+
