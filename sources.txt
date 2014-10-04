@@ -1,1 +1,1 @@
-p;cclog;4;https://dl.dropboxusercontent.com/u/530973/mpt/packages/
+p;cclog;5;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
