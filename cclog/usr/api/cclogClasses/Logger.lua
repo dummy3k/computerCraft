@@ -35,7 +35,7 @@ function Logger:log(level, s)
 	if getLevelValue(level) >= getLevelValue(self:getLevel()) then
 		for k, appender in pairs(self:getAppenders()) do
 			-- local appender = config.appenders[v]
-			appender:append({msg=s, level=level, loggerName=self.name})
+			appender:append({msg=s, level=level, loggerName=self.name, day=os.day(), time=os.time()})
 		end
 	end
 end
