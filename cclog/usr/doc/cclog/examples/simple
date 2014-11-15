@@ -1,0 +1,13 @@
+if not os.loadAPI("/usr/api/cclog") then error("could not load cclog") end
+
+cclog.loadConfigTable({appenders={A1={type="ConsoleAppender", 
+						              format={type="PythonFormatter", format="%(level)s %(msg)s"}}
+					   loggers={root={level="DEBUG", appenders={"A1"}}}
+					 })
+
+
+
+local logger = cclog.getLogger()
+
+logger:debug("start")					
+				
