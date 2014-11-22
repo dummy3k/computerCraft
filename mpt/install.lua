@@ -1,0 +1,6 @@
+shell.run("rm","ccpt")
+shell.run("rm","mpt")
+shell.run("pastebin","get","4LSRnmJ8","mpt")
+term.clear()
+term.setCursorPos(1,1)
+shell.run("mpt","init")
