@@ -11,6 +11,7 @@
 --name to Credits section below
 ------
 --Credits:
+	dummy3k
 --
 
 
@@ -1326,7 +1327,7 @@ end
 
 
 
-if     argv[1] == "init"   then
+if argv[1] == "init"   then
 	if fs.exists(dir) then
 		print("ComuterCraftPackagingTool already initated")
 	else
@@ -1335,9 +1336,12 @@ if     argv[1] == "init"   then
 		fs.makeDir(dir)
 
 		print("Downloading default configuration")
-		downloadln(dir.."sources","http://cc.nativehttp.org/fresh/sources")
-		downloadln(dir.."installed","http://cc.nativehttp.org/fresh/installed")
-		downloadln(dir.."files","http://cc.nativehttp.org/fresh/files")
+		-- BASE_URL = "http://cc.nativehttp.org"
+		-- BASE_URL = "https://raw.githubusercontent.com/dummy3k/computerCraft/master"
+		local baseUrl = argv[2]
+		downloadln(dir.."sources", baseUrl.."fresh/sources")
+		downloadln(dir.."installed", baseUrl.."fresh/installed")
+		downloadln(dir.."files", baseUrl.."fresh/files")
 		print("Checking for upgrades")
 		upgrade()
 	end
