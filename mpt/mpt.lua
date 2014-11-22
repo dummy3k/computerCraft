@@ -11,7 +11,7 @@
 --name to Credits section below
 ------
 --Credits:
-	dummy3k
+--	dummy3k
 --
 
 
@@ -69,7 +69,7 @@ local write = term and term.write
 local http = http
 local shell = shell
 local root = "/"
-local verbose = false
+local verbose = true
 
 if opencomputers then
     root = os.getenv("APTROOT")
@@ -413,6 +413,7 @@ end
 local function downloadln(file, url, r)
     if file then det2P("get:"..file) else det2P("get:"..url) end
 	local res = http.get(url)
+	
 	if res then
 		if file ~= nil then
 			fs.delete(file)
@@ -420,7 +421,8 @@ local function downloadln(file, url, r)
 			fs.delete(file)
 			local fhnd = fs.open(file, "w");
 			if fhnd then
-				if opencomputers then fhnd.write(res.readAll())else  end
+				-- if opencomputers then fhnd.write(res.readAll())else  end
+				fhnd.write(res.readAll())
 				fhnd.close()
 				return res.readAll()
 			else
@@ -1336,8 +1338,8 @@ if argv[1] == "init"   then
 		fs.makeDir(dir)
 
 		print("Downloading default configuration")
-		-- BASE_URL = "http://cc.nativehttp.org"
-		-- BASE_URL = "https://raw.githubusercontent.com/dummy3k/computerCraft/master"
+		-- baseUrl = "http://cc.nativehttp.org/"
+		-- baseUrl = "https://raw.githubusercontent.com/dummy3k/computerCraft/master/mpt/"
 		local baseUrl = argv[2]
 		downloadln(dir.."sources", baseUrl.."fresh/sources")
 		downloadln(dir.."installed", baseUrl.."fresh/installed")
