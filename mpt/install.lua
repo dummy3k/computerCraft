@@ -1,4 +1,4 @@
-BASE_URL = "https://raw.githubusercontent.com/dummy3k/computerCraft/master/"
+BASE_URL = "https://raw.githubusercontent.com/dummy3k/computerCraft/master/mpt/"
 
 function get(name, save_as)
 	local url = BASE_URL"..name..".lua"
@@ -15,7 +15,7 @@ shell.run("rm","ccpt")
 shell.run("rm","mpt")
 
 -- shell.run("pastebin","get","4LSRnmJ8","mpt")
-get("mpt/mpt", "mpt")
+get("mpt")
 
 term.clear()
 term.setCursorPos(1,1)
