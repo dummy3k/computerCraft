@@ -2,3 +2,4 @@ p;cclog;5;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;mpt;9;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;fox;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;gpshost;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
+p;toolTurtle;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/

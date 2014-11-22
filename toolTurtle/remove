@@ -1,10 +1,15 @@
-if not os.loadAPI("fox") then error("fox api") end
+if not os.loadAPI("/usr/api/fox") then error("could not load fox") end
 
-function lookAround()
+max_depth=230
+--max_depth=5
+
+function lookAround(depth)
+  print("depth: "..depth)
+  if depth > max_depth then return end
   for i=1,4 do
     if turtle.compare(1) then
       fox.forward(1, "dig")
-      lookAround()
+      lookAround(depth + 1)
       fox.back()
     end
     fox.turnLeft()
@@ -12,15 +17,15 @@ function lookAround()
   if fox.compareUp() then
     fox.digUp()
     fox.up()
-    lookAround()
+    lookAround(depth + 1)
     fox.down()
   end
   if fox.compareDown() then
     fox.digDown()
     fox.down()
-    lookAround()
+    lookAround(depth + 1)
     fox.up()
   end
 end
 
-lookAround()
+lookAround(0)

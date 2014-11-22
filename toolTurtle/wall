@@ -1,0 +1,58 @@
+if not os.loadAPI("fox") then error("fox api") end
+
+local tArgs = {...}
+width = tonumber(tArgs[1])
+height = tonumber(tArgs[2])
+
+-- 48x59
+local current_slot = 1
+-- fox.select(current_slot)
+
+-- print("hoo")
+
+-- while true do
+	-- event, p1 = os.pullEvent()
+	
+	-- print(event)
+	-- craft()
+-- end
+
+function selectSlot()
+	for i=1,16,1 do
+		if fox.getItemCount(i) > 0 then
+			return i
+		end
+	end
+	print("no more blocks")
+	os.pullEvent("turtle_inventory")
+	return selectSlot()
+end
+
+
+for w=1,width do
+	for h=1,height do
+		if fox.getItemCount(current_slot) == 0 then
+			current_slot = selectSlot()
+			fox.select(current_slot)
+		end
+		if w % 2 == 0 then
+			if h > 1 then
+				fox.down()
+			end
+			if not fox.place() then
+				print("place failed "..w.."/"..h)
+			end
+		else
+			if not fox.place() then
+				print("place failed "..w.."/"..h)
+			end
+			if h < height then
+				fox.up()
+			end
+		end
+	end
+	fox.turnRight()
+	fox.forward()
+	fox.turnLeft()
+end
+

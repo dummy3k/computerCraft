@@ -69,7 +69,7 @@ local write = term and term.write
 local http = http
 local shell = shell
 local root = "/"
-local verbose = true
+local verbose = false
 
 if opencomputers then
     root = os.getenv("APTROOT")

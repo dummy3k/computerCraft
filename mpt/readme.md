@@ -21,6 +21,8 @@ HowTo Clone this repository
 Clone this repository and change the user name in
 the `install.lua` file. 
 
+
+
 HowTo Make a New Package
 ========================
 
@@ -46,4 +48,10 @@ Add the package to the `sources` file:
 p;myNewPackage;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 ```
 
+HowTo Debug MPT
+===========================
 
+You might want to do this:
+```
+local verbose = true
+```
