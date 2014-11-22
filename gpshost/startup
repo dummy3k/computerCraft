@@ -1,4 +1,4 @@
-if not os.loadAPI("fox") then	error("could not load fox") end
+if not os.loadAPI("/usr/api/fox") then error("could not load fox") end
 
 function setLocation(value)
 	f = io.open("var/location", "w")

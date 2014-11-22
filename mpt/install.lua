@@ -1,7 +1,7 @@
 BASE_URL = "https://raw.githubusercontent.com/dummy3k/computerCraft/master/mpt/"
 
 function get(name, save_as)
-	local url = BASE_URL..name..".lua"
+	local url = BASE_URL..name
 	local content = http.get(url)
 	if not content then error("download failed: "..url) end
 

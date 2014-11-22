@@ -12,7 +12,7 @@ Install
 =======
 
 `
-pastebin run U4JRUuCg
+pastebin run rGsYR2zU
 `
 
 HowTo Clone this repository
