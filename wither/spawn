@@ -1,0 +1,120 @@
+SLOT_SAND = 1
+SLOT_SKULL = 2
+MOP_COW = "Cow"
+MOP_WITHER = "Wither"
+PROTOCOLL = "wither"
+
+function placeWither()
+	print("placeWither()")
+	if turtle.getFuelLevel() < 100 then
+		error("not enough fuel")
+	end
+	if turtle.getItemCount(SLOT_SAND) < 4 then
+		print("not enough soul sand")
+		return false
+	end
+	if turtle.getItemCount(SLOT_SKULL) < 3 then
+		print("not enough skulls sand")
+		return false
+	end
+	
+	rs.setOutput("front", false)
+	os.sleep(1)
+	
+	turtle.select(SLOT_SAND)
+	
+	turtle.up()
+	turtle.up()
+	turtle.place()
+	turtle.up()
+	turtle.place()
+	
+	turtle.turnLeft()
+	turtle.forward()
+	turtle.turnRight()
+	turtle.place()
+	turtle.up()
+	turtle.select(SLOT_SKULL)
+	turtle.place()
+	turtle.down()
+	
+	turtle.turnRight()
+	turtle.forward()
+	turtle.forward()
+	turtle.turnLeft()
+	turtle.select(SLOT_SAND)
+	turtle.place()
+	turtle.up()
+	turtle.select(SLOT_SKULL)
+	turtle.place()
+
+	turtle.turnLeft()
+	turtle.forward()
+	turtle.turnRight()
+	turtle.place()
+	turtle.down()
+	turtle.down()
+	turtle.down()
+	turtle.down()
+	
+	return true
+end
+
+function mobNearby(radar, name)
+	for k, v in pairs(radar.getMobIds()) do
+		local data = radar.getMobData(v)
+		if data.name == name then return true end
+	end
+	return false
+end
+
+function waitWither()
+	local radar = peripheral.wrap("left")
+	while mobNearby(radar, MOP_WITHER) do
+		print("waiting for NO wither...")
+		os.sleep(1)
+	end
+end
+
+function waitWitherAlive()
+	rs.setOutput("front", true)
+	rs.setOutput("back", true)
+	-- while not mobNearby(radar, MOP_WITHER) do
+		-- print("waiting for wither...")
+		-- os.sleep(1)
+	-- end
+	if not pcall(waitWither) then
+		print("pcall failed!")
+		os.sleep(3)
+		waitWither()
+	end
+	
+	rs.setOutput("front", false)
+	rs.setOutput("back", false)
+	-- os.sleep(1)
+end
+
+-- function receive()
+	-- local sender, p1 = rednet.receive(PROTOCOLL, 3)
+	-- print(tostring(sender)..": "..tostring(p1))
+	-- return (sender ~= nil)
+-- end
+
+-- rednet.open("right")
+-- rednet.broadcast("ping", PROTOCOLL)
+-- while receive() do
+	-- os.pullEvent("rednet")
+-- end
+
+
+-- if placeWither() then
+	-- waitWitherAlive()
+-- end
+
+-- local radar = peripheral.wrap("left")
+-- local data = radar.getMobData(123)
+-- print(foo)
+
+while placeWither() do
+	waitWitherAlive()
+end

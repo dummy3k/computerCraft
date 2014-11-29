@@ -1,0 +1,17 @@
+local tArgs = {...}
+local side = tArgs[1]
+local filename = tArgs[2]
+
+-- p = peripheral.wrap(side)
+-- print(peripheral.getMethods(side))
+
+f = io.open(filename, "w")
+-- setLocation(vector.new(tArgs[2], tArgs[3], tArgs[4]))
+
+
+for k, v in pairs(peripheral.getMethods(side)) do
+	print(k..": "..tostring(v))
+	f:write(tostring(v).."\n")
+end
+
+f:close()

@@ -1,0 +1,29 @@
+function getRs()
+	return rs.getInput("back")
+end
+
+function dropAll()
+	for i=1,16,1 do
+		if turtle.getItemCount(i) > 0 then
+			turtle.select(i)
+			turtle.drop()
+		end
+	end
+end
+
+while true do
+	dropAll()
+	while not getRs() do
+		print("waiting...")
+		os.pullEvent("redstone")
+	end
+	while getRs() do
+		print("attacking!")
+		if not turtle.attack() then
+			os.sleep(1)
+		else
+			os.sleep(0.1)
+		end
+		
+	end
+end
