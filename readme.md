@@ -23,7 +23,7 @@ cclog
 Install ```mpt```
 
 ```
-> pastebin run 09QAQFaN
+> pastebin run rGsYR2zU 
 ```
 
 Add to ```/etc/ccpt/sources```
