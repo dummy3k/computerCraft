@@ -5,3 +5,4 @@ p;gpshost;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;toolTurtle;2;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;compressor;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;wither;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
+p;initd;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/

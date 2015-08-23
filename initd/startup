@@ -1,0 +1,39 @@
+local FileList = fs.list("/etc/init.d") --Table with all the files and directories available
+
+for _, file in ipairs(FileList) do --Loop. Underscore because we don't use the key, ipairs so it's in order
+	full_filename = "/etc/init.d/"..file
+	shell.run(full_filename)
+end
+
+--[[
+workers = {}
+for _, file in ipairs(FileList) do --Loop. Underscore because we don't use the key, ipairs so it's in order
+  local fn = function()
+				print(file) --Print the file name
+				full_filename = "/etc/init.d/"..
+				return true
+			end
+			
+	table.insert(workers, fn)
+end --End the loop
+
+function foo()
+	print("foo")
+end
+
+foo_array = {foo, foo}
+parallel.waitForAll(unpack(workers))
+-- parallel.waitForAll(foo)
+-- print(table.unpack({workers}))
+-- parallel.waitForAll(table.unpack({workers}))
+-- parallel.waitForAll(table.unpack(workers))
+
+-- function dive(workers):
+	-- print(workers[1]
+	
+function run_pingd()
+	shell.run("pingd.lua")	
+end
+
+parallel.waitForAll(run_pingd, run_pingd)
+]]--
