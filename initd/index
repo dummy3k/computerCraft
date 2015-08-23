@@ -1,2 +1,3 @@
 f;/startup
 f;/etc/init.d/readme.txt
+f;/etc/init.d/00_open_modem.lua
