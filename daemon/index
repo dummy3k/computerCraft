@@ -1,3 +1,4 @@
 d;initd
+f;/bin/daemon.lua
 f;/etc/init.d/99_daemon.lua
 f;/etc/daemon.d/readme.txt
