@@ -1,8 +1,10 @@
 local FileList = fs.list("/etc/init.d") --Table with all the files and directories available
 
 for _, file in ipairs(FileList) do --Loop. Underscore because we don't use the key, ipairs so it's in order
-	full_filename = "/etc/init.d/"..file
-	shell.run(full_filename)
+	if file ~= "readme.txt" then
+		full_filename = "/etc/init.d/"..file
+		shell.run(full_filename)
+	end
 end
 
 --[[
