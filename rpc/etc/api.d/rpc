@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.11"
+VERSION = "0.13"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -7,7 +7,11 @@ local function get_info(obj)
 	end
 end
 
-local function lookup_str(s)
+local function lookup_str(s, _GG)
+	if s == "shell" then
+		return _GG[s]
+	end
+	
 	local obj = _G
 	for item in string.gmatch(s, "[^\\.]+") do
 		obj = obj[item]
@@ -15,22 +19,27 @@ local function lookup_str(s)
 	return obj
 end
 
+function getVersion()
+	return VERSION
+end
+
 --------------------------------------------------------------------------------
 --	Server
 --------------------------------------------------------------------------------
 
 --msg = {cmd="rpc", obj="math", method="min", args={1, 2}}
-local function cmd_call(host, msg)
-	local retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
+local function cmd_call(host, msg, _GG)
+	-- retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
+	local retVal = {lookup_str(msg.obj, _GG)[msg.method](unpack(msg.args))}
 	retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
-local function cmd_list(host, msg)
+local function cmd_list(host, msg, _GG)
 	local retVal = {}
 	-- print(lookup_str(msg.obj))
-	for k, v in pairs(lookup_str(msg.obj)) do
+	for k, v in pairs(lookup_str(msg.obj, _GG)) do
 		-- print(k..": "..type(v))
 		retVal[k] = type(v)
 	end
@@ -40,7 +49,7 @@ local function cmd_list(host, msg)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
-local function cmd_ping(host, msg)
+local function cmd_ping(host, msg, _GG)
 	-- retVal = textutils.serialize(retVal)
 	retVal = "pong"
 	print("foo?")
@@ -48,8 +57,10 @@ local function cmd_ping(host, msg)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
-function daemon()
+function daemon(_GG)
 	print("rpc v"..VERSION.." daemon started...")
+	print("shell", shell)
+	print("shell", _GG["shell"])
 	local commands = {}
 	commands["rpc"] = cmd_call
 	commands["list"] = cmd_list
@@ -60,7 +71,7 @@ function daemon()
 		-- print(host..", "..msg..", "..tostring(prot))
 		msg = textutils.unserialize(msg)
 		print("<",msg)
-		commands[msg.cmd](host, msg)
+		commands[msg.cmd](host, msg, _GG)
 	end	
 end
 

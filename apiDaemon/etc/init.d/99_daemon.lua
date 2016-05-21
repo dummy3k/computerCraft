@@ -7,12 +7,16 @@ for k, v in pairs(_G) do
 			-- print(k.."."..k2..": "..tostring(v))
 			if k2 == "daemon" then
 				-- print(k..": "..tostring(v))
-				daemons[#daemons + 1] = v2
+				daemons[#daemons + 1] = function() v2({shell=shell}) end
+				-- daemons[#daemons + 1] = v2
 				-- v2()
 			end
 		end
 	end
 end
+
+-- print("99shell", shell)
+-- print("99shell", _G["shell"])
 
 if #daemons > 0 then
 	parallel.waitForAll(unpack(daemons))
