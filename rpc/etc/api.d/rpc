@@ -39,26 +39,27 @@ local function cmd_list(host, msg)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
+local function cmd_ping(host, msg)
+	-- retVal = textutils.serialize(retVal)
+	retVal = "pong"
+	print("foo?")
+	print("retVal: ",retVal)
+	rednet.send(host, retVal, PROTOCOLL)
+end
+
 function daemon()
 	print("rpc v0.9 daemon started...")
 	local commands = {}
 	commands["rpc"] = cmd_call
 	commands["list"] = cmd_list
+	commands["ping"] = cmd_ping
 	
 	while true do
 		host, msg, prot = rednet.receive(PROTOCOLL)
 		-- print(host..", "..msg..", "..tostring(prot))
-		-- msg = textutils.unserialize(msg)
 		msg = textutils.unserialize(msg)
 		print("<",msg)
-		-- print(type(msg))
-		-- print(msg.cmd)
-		-- print(msg["cmd"])
 		commands[msg.cmd](host, msg)
-		
-		-- if msg == "ping" then
-			-- rednet.send(host, "pong", PROTOCOLL)
-		-- end
 	end	
 end
 
@@ -70,7 +71,7 @@ local function query(host, msg, verbose)
 	if verbose then
 		print(">", msg)
 	end
-	rednet.send(4, msg, PROTOCOLL)
+	rednet.send(host, msg, PROTOCOLL)
 	p1, p2 = rednet.receive(PROTOCOLL, 2)
 	if not p2 then
 		error("timeout")
@@ -91,6 +92,23 @@ function createProxy(host, obj)
 			msg = {cmd="rpc", obj=obj, method=k, args=tArgs}
 			return unpack(query(host, msg))
 		end
+	end
+	return retVal
+end
+
+function scan()
+	local msg = {cmd="ping"}
+	msg = textutils.serialize(msg)
+	rednet.broadcast(msg, rpc.PROTOCOLL)
+	
+	local retVal = {}
+	while true do
+		-- print("hi")
+		p1, p2 = rednet.receive(PROTOCOLL, 2)
+		if not p1 then
+			break
+		end
+		retVal[#retVal + 1] = p1
 	end
 	return retVal
 end
