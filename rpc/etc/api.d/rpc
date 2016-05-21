@@ -1,0 +1,96 @@
+PROTOCOLL = "rpc"
+
+local function get_info(obj)
+	for k, v in pairs(obj) do
+		print(k..": "..type(v))
+	end
+end
+
+local function lookup_str(s)
+	local obj = _G
+	for item in string.gmatch(s, "[^\\.]+") do
+		obj = obj[item]
+	end
+	return obj
+end
+
+--------------------------------------------------------------------------------
+--	Server
+--------------------------------------------------------------------------------
+
+--msg = {cmd="rpc", obj="math", method="min", args={1, 2}}
+local function cmd_call(host, msg)
+	local retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
+	retVal = textutils.serialize(retVal)
+	-- print("retVal: ",retVal)
+	rednet.send(host, retVal, PROTOCOLL)
+end
+
+local function cmd_list(host, msg)
+	local retVal = {}
+	-- print(lookup_str(msg.obj))
+	for k, v in pairs(lookup_str(msg.obj)) do
+		-- print(k..": "..type(v))
+		retVal[k] = type(v)
+	end
+	
+	retVal = textutils.serialize(retVal)
+	print("retVal: ",retVal)
+	rednet.send(host, retVal, PROTOCOLL)
+end
+
+function daemon()
+	print("rpc v0.9 daemon started...")
+	local commands = {}
+	commands["rpc"] = cmd_call
+	commands["list"] = cmd_list
+	
+	while true do
+		host, msg, prot = rednet.receive(PROTOCOLL)
+		-- print(host..", "..msg..", "..tostring(prot))
+		-- msg = textutils.unserialize(msg)
+		msg = textutils.unserialize(msg)
+		print("<",msg)
+		-- print(type(msg))
+		-- print(msg.cmd)
+		-- print(msg["cmd"])
+		commands[msg.cmd](host, msg)
+		
+		-- if msg == "ping" then
+			-- rednet.send(host, "pong", PROTOCOLL)
+		-- end
+	end	
+end
+
+--------------------------------------------------------------------------------
+--	Client
+--------------------------------------------------------------------------------
+local function query(host, msg, verbose)
+	msg = textutils.serialize(msg)
+	if verbose then
+		print(">", msg)
+	end
+	rednet.send(4, msg, PROTOCOLL)
+	p1, p2 = rednet.receive(PROTOCOLL, 2)
+	if not p2 then
+		error("timeout")
+	end
+	if verbose then
+		print("<", p2)
+	end
+	-- p2 = textutils.unserialize(p2)
+	return textutils.unserialize(p2)
+end
+
+function createProxy(host, obj)
+	local retVal = {}
+	for k, v in pairs(query(host, {cmd="list", obj=obj})) do
+		-- print(k..": "..tostring(v))
+		retVal[k] = function (...)
+			local tArgs = {...}
+			msg = {cmd="rpc", obj=obj, method=k, args=tArgs}
+			return unpack(query(host, msg))
+		end
+	end
+	return retVal
+end

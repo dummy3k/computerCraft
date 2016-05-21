@@ -1,3 +1,5 @@
 f;/startup
 f;/etc/init.d/readme.txt
-f;/etc/init.d/00_open_modem.lua
+f;/etc/init.d/00_show_info.lua
+f;/etc/init.d/01_open_modem.lua
+f;/etc/init.d/02_load_apis.lua
