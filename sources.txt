@@ -10,3 +10,4 @@ p;daemon;2;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;ping;2;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;rpc;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;apiDaemon;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
+p;pingApi;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/

@@ -1,0 +1,19 @@
+PROTOCOLL = "ping"
+
+function daemon()
+	print("ping daemon started...")
+	while true do
+		host, msg, prot = rednet.receive(PROTOCOLL)
+		print(host..", "..msg..", "..tostring(prot))
+		if msg == "ping" then
+			rednet.send(host, "pong", PROTOCOLL)
+		end
+	end	
+end
+
+function ping(host)
+	rednet.send(host, "ping", PROTOCOLL)
+	host, msg, prot = rednet.receive(PROTOCOLL)
+	print(host..", "..msg..", "..tostring(prot))
+end
+
