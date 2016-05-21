@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.10"
+VERSION = "0.11"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -109,6 +109,30 @@ function createProxy(host, obj, verbose, timeout)
 			local tArgs = {...}
 			msg = {cmd="rpc", obj=obj, method=k, args=tArgs}
 			return unpack(query(host, msg))
+		end
+	end
+	return retVal
+end
+
+function createSwarm(hosts, obj, verbose, timeout)
+	local retVal = {}
+	for k, v in pairs(rpc.query(hosts[1], {cmd="list", obj=obj})) do
+		-- print(k..": "..tostring(v))
+		retVal[k] = function (...)
+			local tArgs = {...}
+			local retVal2 = {}
+			local msg = {cmd="rpc", obj=obj, method=k, args=tArgs}
+			local fns = {}
+			for k2, host in pairs(hosts) do
+				-- print(k2..": "..tostring(host))
+				fns[#fns + 1] = function ()
+						-- print(host, msg) 
+						retVal2[host] = rpc.query(host, msg) 
+					end
+			end
+			parallel.waitForAll(unpack(fns))
+			return retVal2
+			--return unpack(query(host, msg))
 		end
 	end
 	return retVal
