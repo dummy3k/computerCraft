@@ -1,4 +1,5 @@
 PROTOCOLL = "rpc"
+VERSION = "0.10"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -48,7 +49,7 @@ local function cmd_ping(host, msg)
 end
 
 function daemon()
-	print("rpc v0.9 daemon started...")
+	print("rpc v"..VERSION.." daemon started...")
 	local commands = {}
 	commands["rpc"] = cmd_call
 	commands["list"] = cmd_list
@@ -66,24 +67,41 @@ end
 --------------------------------------------------------------------------------
 --	Client
 --------------------------------------------------------------------------------
-local function query(host, msg, verbose)
-	msg = textutils.serialize(msg)
+function query(host, msg, verbose, timeout)
+	local msg = textutils.serialize(msg)
 	if verbose then
 		print(">", msg)
 	end
 	rednet.send(host, msg, PROTOCOLL)
-	p1, p2 = rednet.receive(PROTOCOLL, 2)
-	if not p2 then
-		error("timeout")
+	local p1, p2
+	while true do
+		p1, p2 = rednet.receive(PROTOCOLL, 2)
+		-- print(p1..": "..tostring(p2))
+		-- print(host, p1, "<", p2)
+		if verbose then
+			print("<", p2)
+		end
+		-- if not p2 then
+			-- error("timeout")
+			-- return
+		-- end
+		
+		if p1 == host then
+			break
+		-- else
+			-- print("wrong host")
+		end
 	end
-	if verbose then
-		print("<", p2)
-	end
+	-- print("here?")
+	-- print("<", p2)
+	textutils.unserialize(p2)
+	-- print("here?")
+	
 	-- p2 = textutils.unserialize(p2)
 	return textutils.unserialize(p2)
 end
 
-function createProxy(host, obj)
+function createProxy(host, obj, verbose, timeout)
 	local retVal = {}
 	for k, v in pairs(query(host, {cmd="list", obj=obj})) do
 		-- print(k..": "..tostring(v))
