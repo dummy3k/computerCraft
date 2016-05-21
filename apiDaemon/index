@@ -1,0 +1,2 @@
+d;initd
+f;/etc/init.d/99_daemon.lua
