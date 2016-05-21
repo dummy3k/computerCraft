@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.13"
+VERSION = "0.14"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -59,18 +59,23 @@ end
 
 function daemon(_GG)
 	print("rpc v"..VERSION.." daemon started...")
-	print("shell", shell)
-	print("shell", _GG["shell"])
+	local msg = {cmd="startup", version=VERSION}
+	rednet.broadcast(textutils.serialize(msg), PROTOCOLL)
+	
+	-- print("shell", shell)
+	-- print("shell", _GG["shell"])
 	local commands = {}
 	commands["rpc"] = cmd_call
 	commands["list"] = cmd_list
 	commands["ping"] = cmd_ping
+	commands["startup"] = function (...) end
 	
 	while true do
 		host, msg, prot = rednet.receive(PROTOCOLL)
 		-- print(host..", "..msg..", "..tostring(prot))
 		msg = textutils.unserialize(msg)
 		print("<",msg)
+		local fn_cmd = commands[msg.cmd]
 		commands[msg.cmd](host, msg, _GG)
 	end	
 end
