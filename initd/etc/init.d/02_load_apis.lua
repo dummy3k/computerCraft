@@ -13,3 +13,10 @@ for k, v in pairs(fs.list(API_DIRECTORY)) do
 	-- _G[api_name].serve()
 	-- call_by_string(_G[api_name], "serve")
 end
+
+local BIN_DIRECTORY = "/bin"
+if fs.exists(BIN_DIRECTORY) then
+	print("path +", BIN_DIRECTORY)
+	shell.setPath(shell.path()..":"..BIN_DIRECTORY)
+end
+
