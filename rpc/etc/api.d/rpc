@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.14"
+VERSION = "0.17"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -45,15 +45,15 @@ local function cmd_list(host, msg, _GG)
 	end
 	
 	retVal = textutils.serialize(retVal)
-	print("retVal: ",retVal)
+	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
 local function cmd_ping(host, msg, _GG)
 	-- retVal = textutils.serialize(retVal)
 	retVal = "pong"
-	print("foo?")
-	print("retVal: ",retVal)
+	-- print("foo?")
+	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
@@ -73,10 +73,14 @@ function daemon(_GG)
 	while true do
 		host, msg, prot = rednet.receive(PROTOCOLL)
 		-- print(host..", "..msg..", "..tostring(prot))
+		-- print("<",msg)
 		msg = textutils.unserialize(msg)
-		print("<",msg)
 		local fn_cmd = commands[msg.cmd]
-		commands[msg.cmd](host, msg, _GG)
+		if not commands[msg.cmd] then
+			print("unkown cmd: ", msg.cmd)
+		else
+			commands[msg.cmd](host, msg, _GG)
+		end
 	end	
 end
 

@@ -1,0 +1,138 @@
+VERSION = 27
+PROTOCOLL = "p2pUpdate"
+
+local commands = {}
+local updates = {}
+local need_reboot = false
+
+function readPackage(name)
+	local h = fs.open("/etc/api.d/"..name, "r")
+	local retVal = h.readAll()
+	h.close()
+	return retVal
+end
+
+local function write_package(name, content)
+	local h = fs.open("/etc/api.d/"..name, "w")
+	h.write(content)
+	h.close()
+	need_reboot = true
+end
+
+local function transferPackage(host, package)
+	local p = rpc.createProxy(host, "p2pUpdate", false)
+	-- print("p: ", p)
+	-- print("p.readPackage: ", p.readPackage)
+	local package_content = p.readPackage(package)
+	print("updated: ",package)
+	write_package(package, package_content)
+	need_reboot = true
+	
+	local msg = textutils.serialize({cmd="reboot"})
+	rednet.send(os.getComputerID(), msg, PROTOCOLL)
+end
+
+function commands.startup(host, msg, _GG)
+	-- print(">startup")
+	local myVersions = get_versions()
+	for k, v in pairs(msg.versions) do
+		-- print(k..": "..tostring(v))
+		if not myVersions[k] then
+			-- not installed
+		elseif myVersions[k] > v then
+			-- !! p2pUpdate: me (11) > host7 (10)
+			print("!! "..k..": me ("..myVersions[k]..") > host"..host.." ("..v..")")
+			return {cmd="update", package=k, version=myVersions[k]}
+			-- local msg = {cmd="update", package=k, version=myVersions[k]}
+			-- msg = textutils.serialize(msg)
+			-- rednet.broadcast(msg, PROTOCOLL)
+			
+		elseif myVersions[k] < v then
+			-- !! p2pUpdate: me (11) < host7 (10)
+			print("!! "..k..": me ("..myVersions[k]..") < host"..host.." ("..v..")")
+			transferPackage(host, k)
+		end
+	end
+	
+	-- -- retVal = textutils.serialize(retVal)
+	-- retVal = "pong"
+	-- print("foo?")
+	-- print("retVal: ",retVal)
+	-- rednet.send(host, retVal, PROTOCOLL)
+end
+
+function commands.update(host, msg, _GG)
+	if updates[msg.package] then
+		print("already updated: ", msg.package)
+	else
+		local myVersions = get_versions()
+		if myVersions[msg.package] < msg.version then
+			print("update! ", msg.package)
+			updates[msg.package] = msg.version
+			
+			transferPackage(host, msg.package)
+		end
+	end
+end
+
+function broadcastVersions()
+	local msg = {cmd="startup", versions=get_versions()}
+	msg = textutils.serialize(msg)
+	rednet.broadcast(msg, PROTOCOLL)
+end
+
+function daemon(_GG)
+	print("p2pUpdate v"..VERSION.." daemon started...")
+	daemon_internal(_GG)
+end
+
+function daemon_cli(timeout)
+	parallel.waitForAny(rpc.daemon,
+						function () daemon_internal(_G, timeout) end)
+end
+
+function daemon_internal(_GG, timeout)
+	
+	broadcastVersions()
+	
+	while true do
+		local host, msg, prot = rednet.receive(PROTOCOLL, timeout)
+		-- print(host..", "..msg..", "..tostring(prot))
+		if not host then
+			break
+		end
+		-- print("<",msg)
+		msg = textutils.unserialize(msg)
+		if not commands[msg.cmd] then
+			print("unkown cmd: ", msg.cmd)
+		else
+			local response = commands[msg.cmd](host, msg, _GG)
+			if response then
+				-- print(">",msg)
+				response = textutils.serialize(response)
+				rednet.send(host, response, PROTOCOLL)
+			end
+		end	
+		if need_reboot then
+			timeout = 2
+		end
+	end	
+	if need_reboot then
+		os.reboot()
+	end
+	print("daemon_internal, exit")
+end
+
+function get_versions()
+	local retVal = {}
+	for k, v in pairs(_G) do
+		-- print(k)
+		-- print(v)
+		if type(v) == "table" and v.VERSION ~= nil then
+			-- print(k)
+			-- print(v.VERSION)
+			retVal[k] = v.VERSION
+		end
+	end
+	return retVal
+end
