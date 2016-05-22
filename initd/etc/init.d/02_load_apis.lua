@@ -8,6 +8,13 @@ end
 for k, v in pairs(fs.list(API_DIRECTORY)) do
 	-- print(k..": "..tostring(v))
 	os.loadAPI(API_DIRECTORY.."/"..v)
+	-- print("shell: ", shell)
+	if _G[v].registerCompletionFunction then
+		print("registering for "..v)
+		_G[v].registerCompletionFunction(shell)
+		-- shell.setCompletionFunction(v, _G[v].tabCompletionFunction)
+	end
+	
 	-- api_name = string.gsub(v, ".lua$", "")
 	-- api_name = v
 	-- _G[api_name].serve()

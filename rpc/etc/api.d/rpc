@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.17"
+VERSION = "0.18"
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -174,3 +174,45 @@ function scan()
 	end
 	return retVal
 end
+
+--------------------------------------------------------------------------------
+--	CLI
+--------------------------------------------------------------------------------
+local function trimWordList(choices, curText)
+	local retVal = {}
+	for idx = 1, #choices do
+		local word = choices[idx]
+		if word:sub(1, #curText) == curText then
+			retVal[#retVal + 1] = word:sub(#curText + 1)
+		end
+	end
+	return retVal
+end
+
+--	http://computercraft.info/wiki/Shell.setCompletionFunction
+local function tabCompletionFunction(shell, parNumber, curText, lastText)
+	-- print("curText:",curText,"#")
+	-- print("parNumber:",parNumber,"#")
+	-- for k, v in pairs(lastText) do
+		-- print(k..": "..tostring(v))
+	-- end	
+
+	
+	local retVal = {}
+	if parNumber == 1 then
+		return trimWordList({"scan", "help", "version", "install"}, curText)
+		
+	elseif parNumber == 2 then
+		if lastText[#lastText] == "install" then
+			return trimWordList({"aaa", "bbb"}, curText)
+		end
+	end
+	
+	
+	return {}
+end
+
+function registerCompletionFunction(shell)
+	shell.setCompletionFunction("bin/rpc", tabCompletionFunction)
+end
+
