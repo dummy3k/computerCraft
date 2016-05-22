@@ -1,2 +1,3 @@
 d;initd
+d;rpc
 f;/etc/api.d/p2pUpdate
