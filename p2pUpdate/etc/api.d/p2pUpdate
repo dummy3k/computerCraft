@@ -1,4 +1,4 @@
-VERSION = 28
+VERSION = 30
 PROTOCOLL = "p2pUpdate"
 
 local commands = {}
@@ -19,10 +19,10 @@ local function write_package(name, content)
 	need_reboot = true
 end
 
-local function transferPackage(host, package)
+function transferPackage(host, package)
 	local p = rpc.createProxy(host, "p2pUpdate", false)
-	-- print("p: ", p)
-	-- print("p.readPackage: ", p.readPackage)
+	print("p: ", p)
+	print("p.readPackage: ", p.readPackage)
 	local package_content = p.readPackage(package)
 	print("updated: ",package)
 	write_package(package, package_content)
@@ -135,4 +135,45 @@ function get_versions()
 		end
 	end
 	return retVal
+end
+
+--------------------------------------------------------------------------------
+--	CLI
+--------------------------------------------------------------------------------
+local function trimWordList(choices, curText)
+	local retVal = {}
+	for idx = 1, #choices do
+		local word = choices[idx]
+		if word:sub(1, #curText) == curText then
+			retVal[#retVal + 1] = word:sub(#curText + 1)
+		end
+	end
+	return retVal
+end
+
+--	http://computercraft.info/wiki/Shell.setCompletionFunction
+local function tabCompletionFunction(shell, parNumber, curText, lastText)
+	-- print("curText:",curText,"#")
+	-- print("parNumber:",parNumber,"#")
+	-- for k, v in pairs(lastText) do
+		-- print(k..": "..tostring(v))
+	-- end	
+
+	
+	local retVal = {}
+	if parNumber == 1 then
+		return trimWordList({"broadcast", "install"}, curText)
+		
+	elseif parNumber == 2 then
+		if lastText[#lastText] == "install" then
+			return trimWordList({"world"}, curText)
+		end
+	end
+	
+	
+	return {}
+end
+
+function registerCompletionFunction(shell)
+	shell.setCompletionFunction("bin/p2pUpdate", tabCompletionFunction)
 end

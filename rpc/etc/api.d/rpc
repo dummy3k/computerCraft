@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = 36
+VERSION = 39
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -31,8 +31,9 @@ end
 local cmd = {}
 function cmd.rpc(host, msg, _GG)
 	-- retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
-	local retVal = {lookup_str(msg.obj, _GG)[msg.method](unpack(msg.args))}
-	retVal.token = msg.token
+	local cmd_retVal = {lookup_str(msg.obj, _GG)[msg.method](unpack(msg.args))}
+	-- retVal.token = msg.token
+	local retVal = {ret=cmd_retVal, token=msg.token}
 	retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
@@ -46,10 +47,11 @@ function cmd.list(host, msg, _GG)
 		retVal[k] = type(v)
 	end
 	
-	retVal.token = msg.token
-	retVal = textutils.serialize(retVal)
+	-- retVal.token = msg.token
+	-- retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
-	rednet.send(host, retVal, PROTOCOLL)
+	rednet.send(host, textutils.serialize({ret=retVal, token=msg.token}), PROTOCOLL)
+	-- rednet.send(host, retVal, PROTOCOLL)
 end
 
 function cmd.ping(host, msg, _GG)
@@ -133,11 +135,12 @@ function query(host, msg, verbose, timeout)
 
 			-- print("msg.cmd: ", msg.cmd)
 			-- print(host, ">msg.token: ", msg.token, "#, #", request_token, "#")
-			print(host,">", msg.cmd, ", ", msg.token)
+			-- print(host,">", msg.cmd, ", ", msg.token)
+			print(host,">", tostring(p2))
 			if not msg.token then
 				print("no token from ", p1)
 			elseif msg.token == request_token then
-				return msg
+				return msg.ret
 			end
 		end
 	end
