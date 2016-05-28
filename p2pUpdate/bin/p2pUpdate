@@ -1,0 +1,20 @@
+local cmd = {}
+function cmd.broadcast()
+	print("broadcast versions...")
+	-- p2pUpdate.daemon_internal(_G, 2)
+
+	parallel.waitForAny(rpc.daemon,
+						function () p2pUpdate.daemon_internal(_G, 2) end)
+end
+
+
+function main(args)
+	if not cmd[args[1]] then
+		print("unkown command: "..args[1])
+	else
+		cmd[args[1]]()
+	end
+end
+
+local tArgs = {...}
+main(tArgs)

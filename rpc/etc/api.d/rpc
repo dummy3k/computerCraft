@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = "0.18"
+VERSION = 36
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -28,15 +28,17 @@ end
 --------------------------------------------------------------------------------
 
 --msg = {cmd="rpc", obj="math", method="min", args={1, 2}}
-local function cmd_call(host, msg, _GG)
+local cmd = {}
+function cmd.rpc(host, msg, _GG)
 	-- retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
 	local retVal = {lookup_str(msg.obj, _GG)[msg.method](unpack(msg.args))}
+	retVal.token = msg.token
 	retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
-local function cmd_list(host, msg, _GG)
+function cmd.list(host, msg, _GG)
 	local retVal = {}
 	-- print(lookup_str(msg.obj))
 	for k, v in pairs(lookup_str(msg.obj, _GG)) do
@@ -44,17 +46,28 @@ local function cmd_list(host, msg, _GG)
 		retVal[k] = type(v)
 	end
 	
+	retVal.token = msg.token
 	retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
 end
 
-local function cmd_ping(host, msg, _GG)
+function cmd.ping(host, msg, _GG)
 	-- retVal = textutils.serialize(retVal)
 	retVal = "pong"
 	-- print("foo?")
 	-- print("retVal: ",retVal)
+	-- retVal.token = msg.token
 	rednet.send(host, retVal, PROTOCOLL)
+end
+
+local function respond(host, msg, _GG)
+	local fn_cmd = cmd[msg.cmd]
+	if not fn_cmd then
+		print("unkown cmd: ", msg.cmd)
+	else
+		fn_cmd(host, msg, _GG)
+	end
 end
 
 function daemon(_GG)
@@ -64,34 +77,41 @@ function daemon(_GG)
 	
 	-- print("shell", shell)
 	-- print("shell", _GG["shell"])
-	local commands = {}
-	commands["rpc"] = cmd_call
-	commands["list"] = cmd_list
-	commands["ping"] = cmd_ping
-	commands["startup"] = function (...) end
+	-- local commands = {}
+	-- commands["rpc"] = cmd_call
+	-- commands["list"] = cmd_list
+	-- commands["ping"] = cmd_ping
+	-- commands["startup"] = function (...) end
 	
 	while true do
 		host, msg, prot = rednet.receive(PROTOCOLL)
 		-- print(host..", "..msg..", "..tostring(prot))
 		-- print("<",msg)
 		msg = textutils.unserialize(msg)
-		local fn_cmd = commands[msg.cmd]
-		if not commands[msg.cmd] then
-			print("unkown cmd: ", msg.cmd)
-		else
-			commands[msg.cmd](host, msg, _GG)
-		end
+		respond(host, msg, _GG)
 	end	
 end
 
 --------------------------------------------------------------------------------
 --	Client
 --------------------------------------------------------------------------------
+local packetCount = 0
+
+local function createToken()
+	packetCount = packetCount + 1
+	print("packetCount: ", packetCount)
+	return packetCount
+end
+
 function query(host, msg, verbose, timeout)
+	local request_token = createToken()
+	msg.token = request_token
+	print(host,"<", msg.cmd, ", ", msg.token)
 	local msg = textutils.serialize(msg)
 	if verbose then
-		print(">", msg)
+		print(host,"<", msg)
 	end
+	
 	rednet.send(host, msg, PROTOCOLL)
 	local p1, p2
 	while true do
@@ -99,26 +119,30 @@ function query(host, msg, verbose, timeout)
 		-- print(p1..": "..tostring(p2))
 		-- print(host, p1, "<", p2)
 		if verbose then
-			print("<", p2)
+			print(host,">", p2)
 		end
 		-- if not p2 then
 			-- error("timeout")
 			-- return
 		-- end
 		
-		if p1 == host then
-			break
-		-- else
-			-- print("wrong host")
+		if p1 ~= host then
+			respond(host, msg ,{})
+		else
+			msg = textutils.unserialize(p2)
+
+			-- print("msg.cmd: ", msg.cmd)
+			-- print(host, ">msg.token: ", msg.token, "#, #", request_token, "#")
+			print(host,">", msg.cmd, ", ", msg.token)
+			if not msg.token then
+				print("no token from ", p1)
+			elseif msg.token == request_token then
+				return msg
+			end
 		end
 	end
-	-- print("here?")
-	-- print("<", p2)
-	textutils.unserialize(p2)
-	-- print("here?")
-	
-	-- p2 = textutils.unserialize(p2)
-	return textutils.unserialize(p2)
+	error("wtf")
+	-- return textutils.unserialize(p2)
 end
 
 function createProxy(host, obj, verbose, timeout)
@@ -159,7 +183,7 @@ function createSwarm(hosts, obj, verbose, timeout)
 end
 
 function scan()
-	local msg = {cmd="ping"}
+	local msg = {cmd="ping", token=createToken()}
 	msg = textutils.serialize(msg)
 	rednet.broadcast(msg, rpc.PROTOCOLL)
 	
@@ -215,4 +239,3 @@ end
 function registerCompletionFunction(shell)
 	shell.setCompletionFunction("bin/rpc", tabCompletionFunction)
 end
-

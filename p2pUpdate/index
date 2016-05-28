@@ -1,3 +1,4 @@
 d;initd
 d;rpc
 f;/etc/api.d/p2pUpdate
+f;/bin/p2pUpdate
