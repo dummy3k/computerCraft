@@ -1,4 +1,4 @@
-VERSION = 30
+VERSION = 31
 PROTOCOLL = "p2pUpdate"
 
 local commands = {}
@@ -160,13 +160,17 @@ local function tabCompletionFunction(shell, parNumber, curText, lastText)
 	-- end	
 
 	
-	local retVal = {}
+	
 	if parNumber == 1 then
 		return trimWordList({"broadcast", "install"}, curText)
 		
 	elseif parNumber == 2 then
 		if lastText[#lastText] == "install" then
-			return trimWordList({"world"}, curText)
+			local retVal = {}
+			for k, v in pairs(get_versions()) do
+				retVal[#retVal + 1] = k
+			end
+			return trimWordList(retVal, curText)
 		end
 	end
 	

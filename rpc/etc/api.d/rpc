@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = 39
+VERSION = 46
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -7,14 +7,22 @@ local function get_info(obj)
 	end
 end
 
-local function lookup_str(s, _GG)
+function lookup_str(s, g, _GG)
 	if s == "shell" then
 		return _GG[s]
 	end
 	
-	local obj = _G
+	-- if not g then
+		-- g = _G
+	-- end
+	
+	-- local obj = _G
+	local obj = g
 	for item in string.gmatch(s, "[^\\.]+") do
 		obj = obj[item]
+	end
+	if not obj then
+		print("lookup failed: ", s)
 	end
 	return obj
 end
@@ -31,9 +39,16 @@ end
 local cmd = {}
 function cmd.rpc(host, msg, _GG)
 	-- retVal = {_G[msg.obj][msg.method](unpack(msg.args))}
-	local cmd_retVal = {lookup_str(msg.obj, _GG)[msg.method](unpack(msg.args))}
+	-- local cmd_retVal = {lookup_str(msg.obj, _G, _GG)[msg.method](unpack(msg.args))}
+	
+	local cmd_retVal = nil
+	local status, err = pcall(function ()
+			cmd_retVal ={lookup_str(msg.obj, _G, _GG)[msg.method](unpack(msg.args))}
+		end)
+	
+	
 	-- retVal.token = msg.token
-	local retVal = {ret=cmd_retVal, token=msg.token}
+	local retVal = {ret=cmd_retVal, token=msg.token, status=status, err=err}
 	retVal = textutils.serialize(retVal)
 	-- print("retVal: ",retVal)
 	rednet.send(host, retVal, PROTOCOLL)
@@ -42,7 +57,7 @@ end
 function cmd.list(host, msg, _GG)
 	local retVal = {}
 	-- print(lookup_str(msg.obj))
-	for k, v in pairs(lookup_str(msg.obj, _GG)) do
+	for k, v in pairs(lookup_str(msg.obj, _G, _GG)) do
 		-- print(k..": "..type(v))
 		retVal[k] = type(v)
 	end
@@ -101,8 +116,8 @@ local packetCount = 0
 
 local function createToken()
 	packetCount = packetCount + 1
-	print("packetCount: ", packetCount)
-	return packetCount
+	-- print("packetCount: ", packetCount)
+	return tostring(os.getComputerID().."#"..tostring(packetCount))
 end
 
 function query(host, msg, verbose, timeout)
@@ -140,6 +155,9 @@ function query(host, msg, verbose, timeout)
 			if not msg.token then
 				print("no token from ", p1)
 			elseif msg.token == request_token then
+				if msg.err then
+					error("host"..host..": "..msg.err)
+				end
 				return msg.ret
 			end
 		end
