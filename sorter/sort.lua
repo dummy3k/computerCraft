@@ -33,7 +33,7 @@ function sort_items()
 					elseif items[detail.name] == "top" then
 						turtle.dropUp()
 					elseif items[detail.name] == "bottom" then
-						turtle.dropUp()
+						turtle.dropDown()
 					end
 				end
 			end
