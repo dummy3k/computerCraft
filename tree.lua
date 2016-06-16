@@ -1,4 +1,4 @@
-if not os.loadAPI("fox") then	error("could not load fox") end
+-- if not os.loadAPI("fox") then	error("could not load fox") end
 
 slot_fuel = 1
 slot_sapling = 2
@@ -63,7 +63,15 @@ function placeSapling()
 end
 
 function wait4grow()
-	placeSapling()
+	local success, detail = turtle.inspect()
+	if not success then
+		placeSapling()
+	else
+		if detail.name ~= "minecraft:log" then
+			print(tostring(detail.name), " in front of me!")
+			return
+		end
+	end
 	while true do
 		turtle.select(slot_wood)
 		--if turtle.detect() and not turtle.compare() then

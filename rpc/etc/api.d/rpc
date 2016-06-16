@@ -1,5 +1,5 @@
 PROTOCOLL = "rpc"
-VERSION = 46
+VERSION = 56
 
 local function get_info(obj)
 	for k, v in pairs(obj) do
@@ -79,6 +79,14 @@ function cmd.ping(host, msg, _GG)
 end
 
 local function respond(host, msg, _GG)
+	if not msg then
+		print("no msg")
+	end
+	if not msg.cmd then
+		print("msg hs not cmd: ", type(msg))
+		-- print("msg hs not cmd: ", textutils.unserialize(msg))
+	end
+	
 	local fn_cmd = cmd[msg.cmd]
 	if not fn_cmd then
 		print("unkown cmd: ", msg.cmd)
@@ -104,8 +112,20 @@ function daemon(_GG)
 		host, msg, prot = rednet.receive(PROTOCOLL)
 		-- print(host..", "..msg..", "..tostring(prot))
 		-- print("<",msg)
-		msg = textutils.unserialize(msg)
-		respond(host, msg, _GG)
+		
+		-- msg = textutils.unserialize(msg)
+		-- respond(host, msg, _GG)
+		
+		local msg_dict = textutils.unserialize(msg)
+		local status, err = pcall(function() 
+				respond(host, msg_dict, _GG)
+			end)
+		if not status then
+			print(msg)
+			print(err)
+			rednet.send(host, textutils.serialize({token=msg.token, status=status, err=err}), PROTOCOLL)
+		end
+			
 	end	
 end
 
