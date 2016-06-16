@@ -12,4 +12,4 @@ p;rpc;39;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;apiDaemon;2;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;pingApi;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
 p;p2pUpdate;30;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
-p;sorter;1;https://raw.githubusercontent.com/dummy3k/computerCraft/master/
+p;sorter;2;https://raw.githubusercontent.com/dummy3k/computerCraft/master/

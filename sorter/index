@@ -1,2 +1,3 @@
 d;initd
 f;/sort.lua
+f;/etc/init.d/99_sort.lua
