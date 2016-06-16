@@ -27,13 +27,21 @@ function sort_items()
 				else
 					print(tostring(detail.name).." "..items[detail.name])
 					turtle.select(slot)
-					loop_again = true
 					if items[detail.name] == "front" then
-						turtle.drop()
+						if turtle.drop() then
+							loop_again = true
+						end
+						
 					elseif items[detail.name] == "top" then
-						turtle.dropUp()
+						if turtle.dropUp() then
+							loop_again = true
+						end
+						
 					elseif items[detail.name] == "bottom" then
-						turtle.dropDown()
+						if turtle.dropDown() then
+							loop_again = true
+						end
+						
 					end
 				end
 			end
